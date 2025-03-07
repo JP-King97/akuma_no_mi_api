@@ -11,8 +11,8 @@ class Fruit_Type(str, Enum):
     PARAMECIA = "paramecia"
     LOGIA = "logia"
     
-class devil_fruit(BaseModel):
-    id: uuid.UUID
+class Devil_Fruit(BaseModel):
+    #id: uuid.UUID
     name: str = Field(max_length=40 )
     fruit_type: Fruit_Type
     effect: str = Field(max_length=100)
@@ -20,7 +20,10 @@ class devil_fruit(BaseModel):
     photo_url: Optional[str] = None
     comments: Optional[str] = Field(max_length=100, default=None)
 
-devil_fruits:List[devil_fruit] = []
+class Devil_Fruit_WithID(Devil_Fruit):
+    id:uuid.UUID
+
+devil_fruits:List[Devil_Fruit_WithID] = []
 
 characters = []
 
@@ -28,20 +31,28 @@ characters = []
 def root():
     return{"Kaizoku ou ni ore wa naru"}
 
-@app.post("/devil_fruit")
-def create_fruit(devil_fruit:devil_fruit):
+@app.get("/devil_fruits", response_model=List[Devil_Fruit_WithID])
+def get_all_fruits():
+    return devil_fruits
+
+@app.post("/devil_fruit", response_model=Devil_Fruit_WithID)
+def create_fruit(devil_fruit:Devil_Fruit):
     for existing_devil_fruit in devil_fruits:
         if existing_devil_fruit.name.lower() == devil_fruit.name.lower():
-            raise HTTPException(status_code=409, detail="Devil fruit already ") 
+            raise HTTPException(status_code=409, detail="Devil fruit already exists") 
         
-    new_fruit = devil_fruit.model_copy(update={"id": uuid.uuid4()})
+    new_fruit = Devil_Fruit_WithID(id=uuid.uuid4(), **devil_fruit.model_dump())
     
     devil_fruits.append(new_fruit)
     
     return new_fruit
 
-    
-
+@app.get("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit_WithID)
+def get_fruit_by_id(devil_fruit_id:uuid.UUID):
+    for devil_fruit in devil_fruits:
+        if devil_fruit.id == devil_fruit_id:
+            return devil_fruit
+    raise HTTPException(status_code=404, detail= "Devil fruit id not found")
 
 if __name__ == "__main__":
     import uvicorn
