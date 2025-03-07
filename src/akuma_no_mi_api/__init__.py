@@ -22,7 +22,35 @@ class Devil_Fruit(BaseModel):
 class Devil_Fruit_WithID(Devil_Fruit):
     id:uuid.UUID
 
-devil_fruits:List[Devil_Fruit_WithID] = []
+devil_fruits:List[Devil_Fruit_WithID] = [
+    Devil_Fruit_WithID(
+        id = uuid.UUID("5a25062e-341c-4e45-9ccb-442746bb7b36"),
+        name = "Gomu Gomu no mi",
+        fruit_type = "paramecia",
+        effect = "Rubber properties for the user",
+        current_user = "Monkey D. Luffy",
+        photo_url = None,
+        comments = "Original name 'Hito Hito no mi: Nika Model’"
+    ),
+    Devil_Fruit_WithID(
+        id = uuid.UUID("b53c5ee1-b0c6-4d38-ac22-36c77df4a318"),
+        name = "Hito Hito no mi",
+        fruit_type = "zoan",
+        effect = "Humans' habilites for the user",
+        current_user = "Tony Tony Chopper",
+        photo_url = None,
+        comments = None
+    ),
+    Devil_Fruit_WithID(
+        id = uuid.UUID("4024e84d-df58-41f7-940b-c820b612698b"),
+        name = "Hana Hana no mi",
+        fruit_type = "paramecia",
+        effect = "Allow the user to bloom body parts on solid surfaces",
+        current_user = "Nico robin",
+        photo_url = None,
+        comments = None
+    )
+]
 
 characters = []
 
@@ -62,6 +90,14 @@ def update_devil_fruit_by_id(devil_fruit_id:uuid.UUID,updated_devil_fruit_info:D
             devil_fruits[index] = updated_devil_fruit
             return updated_devil_fruit
     raise HTTPException(status_code=404, detail= "Devil fruit id not found")
+
+@app.delete("/devil_fruit/{devil_fruit_id}",response_model=str)
+def delete_devil_fruit_by_id(devil_fruit_id:uuid.UUID):
+    for index, devil_fruit in enumerate(devil_fruits):
+        if devil_fruit.id == devil_fruit_id:
+            devil_fruits.pop(index)
+            return f"Devil fruit {devil_fruit.name} was deleted."
+    raise HTTPException(status_code=404, detail= "Devil fruit id not found.")
 
 if __name__ == "__main__":
     import uvicorn
