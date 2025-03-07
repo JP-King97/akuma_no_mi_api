@@ -1,0 +1,22 @@
+# Byte-compiled and cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Poetry lock file 
+poetry.lock
+
+# Logs and database files
+*.log
+*.sqlite3
+instance/
+db.sqlite3
+
+# IDE/editor settings
+.vscode/
+.idea/
