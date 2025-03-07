@@ -12,7 +12,6 @@ class Fruit_Type(str, Enum):
     LOGIA = "logia"
     
 class Devil_Fruit(BaseModel):
-    #id: uuid.UUID
     name: str = Field(max_length=40 )
     fruit_type: Fruit_Type
     effect: str = Field(max_length=100)
@@ -52,6 +51,16 @@ def get_fruit_by_id(devil_fruit_id:uuid.UUID):
     for devil_fruit in devil_fruits:
         if devil_fruit.id == devil_fruit_id:
             return devil_fruit
+    raise HTTPException(status_code=404, detail= "Devil fruit id not found")
+
+@app.patch("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit_WithID)
+def update_devil_fruit_by_id(devil_fruit_id:uuid.UUID,updated_devil_fruit_info:Devil_Fruit):
+    for index, devil_fruit in enumerate(devil_fruits):
+        if devil_fruit.id == devil_fruit_id:
+            updated_devil_fruit = Devil_Fruit_WithID(id=devil_fruit_id,**updated_devil_fruit_info.model_dump())
+
+            devil_fruits[index] = updated_devil_fruit
+            return updated_devil_fruit
     raise HTTPException(status_code=404, detail= "Devil fruit id not found")
 
 if __name__ == "__main__":
