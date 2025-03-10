@@ -9,19 +9,17 @@ class Fruit_Type(str, Enum):
     LOGIA = "logia"
     
 class Devil_Fruit(BaseModel):
+    id:int
     name: str = Field(max_length=40 )
     fruit_type: Fruit_Type
     effect: str = Field(max_length=150)
     current_user: Optional[str] = Field(max_length=40, default=None)
     photo_url: Optional[str] = None
-    comments: Optional[str] = Field(max_length=100, default=None)
+    comments: Optional[str] = Field(max_length=150, default=None)
 
-class Devil_Fruit_WithID(Devil_Fruit):
-    id:uuid.UUID
-
-devil_fruits:List[Devil_Fruit_WithID] = [
-    Devil_Fruit_WithID(
-        id = uuid.UUID("5a25062e-341c-4e45-9ccb-442746bb7b36"),
+devil_fruits:List[Devil_Fruit] = [
+    Devil_Fruit(
+        id = 1,
         name = "Gomu Gomu no mi",
         fruit_type = "paramecia",
         effect = "Rubber properties for the user",
@@ -29,8 +27,8 @@ devil_fruits:List[Devil_Fruit_WithID] = [
         photo_url = None,
         comments = "Original name 'Hito Hito no mi: Nika Model’"
     ),
-    Devil_Fruit_WithID(
-        id = uuid.UUID("b53c5ee1-b0c6-4d38-ac22-36c77df4a318"),
+    Devil_Fruit(
+        id = 2,
         name = "Hito Hito no mi",
         fruit_type = "zoan",
         effect = "Humans' habilites for the user",
@@ -38,13 +36,23 @@ devil_fruits:List[Devil_Fruit_WithID] = [
         photo_url = None,
         comments = None
     ),
-    Devil_Fruit_WithID(
-        id = uuid.UUID("4024e84d-df58-41f7-940b-c820b612698b"),
+    Devil_Fruit(
+        id = 3,
         name = "Hana Hana no mi",
         fruit_type = "paramecia",
-        effect = "Allow the user to bloom body parts on solid surfaces",
+        effect = "blossomed user, Allow the user to bloom body parts on solid surfaces",
         current_user = "Nico robin",
         photo_url = None,
         comments = None
+    ),
+    Devil_Fruit(
+        id = 4,
+        name = "Yomi Yomi no mi",
+        fruit_type = "paramecia",
+        effect = "Resurrected human, enhances the soul of the user granting soul's habilites including getting back from dead",
+        current_user = "Brook (Soul King)",
+        photo_url = None,
+        comments = "Natural enemy of the fruit Soru Soru no mi"
     )
+
 ]
