@@ -52,11 +52,18 @@ def create_fruit(devil_fruit:Devil_Fruit,db:Session = Depends(get_db)):
     return new_df
 
 @router.get("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit)
-def get_fruit_by_id(devil_fruit_id:int):
-    for devil_fruit in devil_fruits:
-        if devil_fruit.id == devil_fruit_id:
-            return devil_fruit
-    raise HTTPException(status_code=404, detail= "Devil fruit id not found")
+def get_fruit_by_id(devil_fruit_id:int,db:Session = Depends(get_db)):
+    data = db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id).first()
+    print("query response:",data)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Devil fruit id not found")
+    else:
+        return data 
+
+    # for devil_fruit in devil_fruits:
+    #     if devil_fruit.id == devil_fruit_id:
+    #         return devil_fruit
+    # raise HTTPException(status_code=404, detail= "Devil fruit id not found")
 
 @router.patch("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit)
 def update_devil_fruit_by_id(devil_fruit_id:int,updated_devil_fruit_info:Devil_Fruit):
