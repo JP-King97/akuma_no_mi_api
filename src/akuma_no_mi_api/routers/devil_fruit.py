@@ -54,7 +54,6 @@ def create_fruit(devil_fruit:Devil_Fruit,db:Session = Depends(get_db)):
 @router.get("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit)
 def get_fruit_by_id(devil_fruit_id:int,db:Session = Depends(get_db)):
     data = db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id).first()
-    print("query response:",data)
     if data is None:
         raise HTTPException(status_code=404, detail="A devil fruit id not found")
     else:
@@ -86,9 +85,11 @@ def update_devil_fruit_by_id(devil_fruit_id:int,updated_devil_fruit_info:Devil_F
     # raise HTTPException(status_code=404, detail= "Devil fruit id not found")
 
 @router.delete("/devil_fruit/{devil_fruit_id}",response_model=str)
-def delete_devil_fruit_by_id(devil_fruit_id:int):
-    for index, devil_fruit in enumerate(devil_fruits):
-        if devil_fruit.id == devil_fruit_id:
-            devil_fruits.pop(index)
-            return f"A devil fruit {devil_fruit.name} was deleted."
-    raise HTTPException(status_code=404, detail= "A devil fruit id not found.")
+def delete_devil_fruit_by_id(devil_fruit_id:int, db:Session = Depends(get_db)):
+    df = db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id).first()
+    if df is None:
+        raise HTTPException(status_code=404, detail="A devil fruit id not found")
+    df_name = df.name
+    db.delete(df)
+    db.commit()
+    return f"A devil fruit {df_name} was deleted."
