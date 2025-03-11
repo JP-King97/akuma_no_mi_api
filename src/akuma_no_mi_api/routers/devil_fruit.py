@@ -32,7 +32,7 @@ def create_fruit(devil_fruit:Devil_Fruit,db:Session = Depends(get_db)):
             if existing_df.id == df["id"]:
                 raise HTTPException(status_code=400, detail="A devil fruit with this ID already exists.")
         if existing_df.name == df["name"]:
-            raise HTTPException(status_code=400, detail="A devil fruit swith this name already exists.")
+            raise HTTPException(status_code=400, detail="A devil fruit with this name already exists.")
 
     new_df = models.devil_fruits(
         id = df["id"] if df["id"] is not None else next_id,
@@ -56,29 +56,39 @@ def get_fruit_by_id(devil_fruit_id:int,db:Session = Depends(get_db)):
     data = db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id).first()
     print("query response:",data)
     if data is None:
-        raise HTTPException(status_code=404, detail="Devil fruit id not found")
+        raise HTTPException(status_code=404, detail="A devil fruit id not found")
     else:
         return data 
 
-    # for devil_fruit in devil_fruits:
-    #     if devil_fruit.id == devil_fruit_id:
-    #         return devil_fruit
-    # raise HTTPException(status_code=404, detail= "Devil fruit id not found")
-
 @router.patch("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit)
-def update_devil_fruit_by_id(devil_fruit_id:int,updated_devil_fruit_info:Devil_Fruit):
-    for index, devil_fruit in enumerate(devil_fruits):
-        if devil_fruit.id == devil_fruit_id:
-            updated_devil_fruit = Devil_Fruit(**updated_devil_fruit_info.model_dump())
+def update_devil_fruit_by_id(devil_fruit_id:int,updated_devil_fruit_info:Devil_Fruit, db:Session = Depends(get_db)):
+   
+   df = db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id)
+   name_check = db.query(models.devil_fruits).filter(updated_devil_fruit_info.name == models.devil_fruits.name)
+   print( "name_check = ",name_check)
+   if not df.first():
+       raise HTTPException(status_code=404, detail="A devil fruit id not found")
+   if db.query(models.devil_fruits).filter((models.devil_fruits.id == updated_devil_fruit_info.id) & (updated_devil_fruit_info.id != devil_fruit_id)).first():
+       raise HTTPException(status_code=404, detail="A devil fruit with this id already exists. ")  
+   if name_check.first():
+       raise HTTPException(status_code=400, detail="A devil fruit with this name already exists.")
+   df.update(updated_devil_fruit_info.model_dump(exclude_unset=True))
+   db.commit()
+   return db.query(models.devil_fruits).filter(models.devil_fruits.id == devil_fruit_id).first()
 
-            devil_fruits[index] = updated_devil_fruit
-            return updated_devil_fruit
-    raise HTTPException(status_code=404, detail= "Devil fruit id not found")
+   
+    # for index, devil_fruit in enumerate(devil_fruits):
+    #     if devil_fruit.id == devil_fruit_id:
+    #         updated_devil_fruit = Devil_Fruit(**updated_devil_fruit_info.model_dump())
+
+    #         devil_fruits[index] = updated_devil_fruit
+    #         return updated_devil_fruit
+    # raise HTTPException(status_code=404, detail= "Devil fruit id not found")
 
 @router.delete("/devil_fruit/{devil_fruit_id}",response_model=str)
 def delete_devil_fruit_by_id(devil_fruit_id:int):
     for index, devil_fruit in enumerate(devil_fruits):
         if devil_fruit.id == devil_fruit_id:
             devil_fruits.pop(index)
-            return f"Devil fruit {devil_fruit.name} was deleted."
-    raise HTTPException(status_code=404, detail= "Devil fruit id not found.")
+            return f"A devil fruit {devil_fruit.name} was deleted."
+    raise HTTPException(status_code=404, detail= "A devil fruit id not found.")
