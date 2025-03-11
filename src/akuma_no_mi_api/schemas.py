@@ -9,13 +9,16 @@ class Fruit_Type(str, Enum):
     LOGIA = "logia"
     
 class Devil_Fruit(BaseModel):
-    id:int
+    id:Optional [int] = None
     name: str = Field(max_length=40 )
     fruit_type: Fruit_Type
     effect: str = Field(max_length=150)
     current_user: Optional[str] = Field(max_length=40, default=None)
     photo_url: Optional[str] = None
     comments: Optional[str] = Field(max_length=150, default=None)
+
+    class Config:
+        from_attributes = True  # Ensures compatibility with SQLAlchemy models
 
 devil_fruits:List[Devil_Fruit] = [
     Devil_Fruit(

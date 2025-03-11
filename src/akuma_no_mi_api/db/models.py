@@ -21,10 +21,10 @@ class FruitType(str, PyEnum):
     PARAMECIA = "paramecia"
     LOGIA = "logia"
 
-class devil_fruit(Base):
-    __tablename__= "devil_fruit"
+class devil_fruits(Base):
+    __tablename__= "devil_fruits"
 
-    id = Column(Integer,primary_key=True, autoincrement=True)
+    id = Column(Integer,primary_key=True, index=True, autoincrement=True)
     name = Column(String(40),nullable=False)
     fruit_type =Column(Enum(FruitType),nullable=False) #Fruit_Type
     effect = Column(String(150),nullable=False)

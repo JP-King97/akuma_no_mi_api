@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from src.akuma_no_mi_api.schemas import devil_fruits, Devil_Fruit
 from src.akuma_no_mi_api.db.database import get_db
 from sqlalchemy.orm import Session
@@ -13,21 +14,42 @@ router = APIRouter(
 
 @router.get("/devil_fruits", response_model=List[Devil_Fruit])
 def get_all_fruits(db:Session = Depends(get_db)):
-    data = db.query(models.devil_fruit).all()
+    data = db.query(models.devil_fruits).all()
     return data
 
 @router.post("/devil_fruit", response_model=Devil_Fruit)
-def create_fruit(devil_fruit:Devil_Fruit):
-    for existing_devil_fruit in devil_fruits:
-        if existing_devil_fruit.name.lower() == devil_fruit.name.lower():
-           raise HTTPException(status_code=409, detail="Devil fruit already exists") 
-        
-    new_fruit = Devil_Fruit(**devil_fruit.model_dump())
+def create_fruit(devil_fruit:Devil_Fruit,db:Session = Depends(get_db)):
+    df = devil_fruit.model_dump()
+    existing_df = db.query(models.devil_fruits).filter(
+        (models.devil_fruits.id == df["id"]) | (models.devil_fruits.name == df["name"])
+    ).first()
 
+    result = db.execute(text("SELECT setval('devil_fruits_id_seq', COALESCE((SELECT MAX(id) FROM devil_fruits), 1), false);"))
+    next_id = result.scalar() + 1
+
+    if existing_df:
+        if df["id"]:
+            if existing_df.id == df["id"]:
+                raise HTTPException(status_code=400, detail="A devil fruit with this ID already exists.")
+        if existing_df.name == df["name"]:
+            raise HTTPException(status_code=400, detail="A devil fruit swith this name already exists.")
+
+    new_df = models.devil_fruits(
+        id = df["id"] if df["id"] is not None else next_id,
+        name = df["name"],
+        fruit_type = df["fruit_type"],
+        effect = df["effect"],
+        current_user = df["current_user"],
+        photo_url = df["photo_url"],
+        comments = df["comments"]
+    )
     
-    devil_fruits.append(new_fruit)
+    db.add(new_df)
+    db.commit()
+    db.refresh(new_df)
+ 
     
-    return new_fruit
+    return new_df
 
 @router.get("/devil_fruit/{devil_fruit_id}",response_model=Devil_Fruit)
 def get_fruit_by_id(devil_fruit_id:int):
