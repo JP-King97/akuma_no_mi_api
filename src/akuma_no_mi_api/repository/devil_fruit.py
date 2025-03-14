@@ -1,9 +1,14 @@
 
-from fastapi import HTTPException
+from io import BytesIO
+from typing import Any, Dict, List
+from fastapi import Depends, File, HTTPException, UploadFile
+import pandas as pd
 from sqlalchemy import text, update
 from sqlalchemy.orm import Session
 from akuma_no_mi_api.db import models
+from akuma_no_mi_api.db.database import get_db
 from akuma_no_mi_api.routers import devil_fruit
+from src.akuma_no_mi_api.schemas import Devil_Fruit
 
 def df_query(db:Session):
     return db.query(models.devil_fruits)
@@ -33,6 +38,7 @@ def create_df(devil_fruit:devil_fruit,db:Session):
         fruit_type = df["fruit_type"],
         effect = df["effect"],
         current_user = df["current_user"],
+        cannon = df["cannon"],
         photo_url = df["photo_url"],
         comments = df["comments"]
     )
@@ -40,7 +46,7 @@ def create_df(devil_fruit:devil_fruit,db:Session):
     db.add(new_df)
     db.commit()
     db.refresh(new_df)
-    return new_df
+    return Devil_Fruit.model_validate(devil_fruit)
 
 def get_df_byID(devil_fruit_id:int, db:Session):
     data = df_query(db).filter(models.devil_fruits.id == devil_fruit_id).first()
@@ -72,3 +78,33 @@ def delete_df_byID(devil_fruit_id:int,db:Session):
     db.delete(df)
     db.commit()
     return f"A devil fruit {df_name} was deleted."
+
+async def create_dfs_byFILE(file: UploadFile = File(...), db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    # Verify the fileType (xlsx)
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Only XLSX files are supported.")
+
+    # Read the XLSX file into a DataFrame
+    contents = await file.read()
+    df = pd.read_excel(BytesIO(contents))
+
+    # Verify all the properties/columns, are in the file
+    required_columns = {"id", "name", "fruit_type", "effect", "current_user","cannon", "photo_url", "comments"}
+    if not required_columns.issubset(df.columns):
+        raise HTTPException(status_code=400, detail=f"Missing required columns: {required_columns - set(df.columns)}")
+
+    responses = []
+    for _,row in df.iterrows():
+        devil_fruit_data = row.to_dict()
+        # Convert NaN values to NoneSS
+        devil_fruit_data = {key: (None if pd.isna(value) else value) for key, value in devil_fruit_data.items()}
+        try:
+            # Create Devil_Fruit instance
+            devil_fruit = Devil_Fruit(**devil_fruit_data)
+            # Call create function
+            new_df = create_df(devil_fruit, db)
+            responses.append({"status": "success", "data": new_df})
+        except HTTPException as e:
+            responses.append({"status": "error", "error": e.detail})
+
+    return responses

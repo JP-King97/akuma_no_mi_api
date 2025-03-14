@@ -1,11 +1,10 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
-from akuma_no_mi_api.repository.devil_fruit import create_df, delete_df_byID, get_all_df, get_df_byID, update_df_byID
-from src.akuma_no_mi_api.schemas import devil_fruits, Devil_Fruit
+from typing import Any, Dict, List
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from akuma_no_mi_api.repository.devil_fruit import create_df, create_dfs_byFILE, delete_df_byID, get_all_df, get_df_byID, update_df_byID
+from src.akuma_no_mi_api.schemas import Devil_Fruit
 from src.akuma_no_mi_api.db.database import get_db
 from sqlalchemy.orm import Session
-from akuma_no_mi_api.db import models
+import pandas as pd
 
 router = APIRouter(
     prefix="/devil_fruit",
@@ -32,3 +31,7 @@ def update_devil_fruit_by_id(devil_fruit_id:int,updated_devil_fruit_info:Devil_F
 @router.delete("/devil_fruit/{devil_fruit_id}",response_model=str)
 def delete_devil_fruit_by_id(devil_fruit_id:int, db:Session = Depends(get_db)):
     return delete_df_byID(devil_fruit_id,db)
+
+@router.post("/upload_devil_fruits")
+async def upload_devil_fruits(file: UploadFile = File(...), db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    return await create_dfs_byFILE(file,db)
